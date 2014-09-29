@@ -1,0 +1,207 @@
+
+<!DOCTYPE html>
+<head>
+
+<style id="carouselStyles">
+  
+  html { 
+     min-height: 100%;
+  }
+
+  body {
+    margin: 0;
+    height: 100%;
+    background-image: -webkit-linear-gradient(top, #00000F, #7A7AA3);
+  }
+
+  #carousel {
+    position: absolute;
+    top:        50%;
+    height:     600px; 
+    width:      100%;
+    margin-top: -300px;
+    overflow:   hidden;
+  }
+  
+  .carousel_item {
+    position: absolute;
+    display:  inline-block;
+
+    width:          300px;
+    height:         300px;
+    margin:         150px 0;
+    margin-left:    -400px; 
+    border:         0;
+    border-radius:  20px;
+
+    background: hsla(228, 60%, 50%, 0.8);
+    box-shadow: 3px 3px 3px rgba(0,0,0, 0.3), -3px -3px 3px rgba(0,0,0, 0.3), -3px 3px 3px rgba(0,0,0, 0.3), 3px -3px 3px rgba(0,0,0, 0.3);
+    
+    text-align: center;
+    font-size:  600%;
+    color:      #fff;
+
+  }
+
+  .center{
+    height:     500px;
+    width:      500px;
+    margin-top: 50px;
+    transition: all 2s 0.5s;
+  }
+
+  .left{
+    margin-left:  -100px; 
+    transition:   all 2s 0.5s;
+  }
+
+  .right{
+    transition: all 2s 0.5s;
+  }
+
+  .right_next{
+    margin-left:  105%; 
+    transition:   all 1s 0.5s;
+  }
+
+</style>
+
+<script>
+  // tweak CSS so that browser resize repositions the items correctly
+  // that wouldnt be needed if there would be fixed carousel width in the requirements
+  var cssHandler = function(){
+    var module = {
+      getCSS: function (name, styleSheet){
+        var item = null;
+        for(var i=0; i<styleSheet.rules.length; i++) {
+          var rule = styleSheet.rules[i];
+          if(rule.selectorText == name){
+            item = rule;
+            break;
+          }
+        }
+        return item;
+      },
+
+      getBrouserHeight: function(){
+        return window.innerHeight;
+      },
+
+      getBrowserWidth: function(){
+        return window.innerWidth;
+      },
+
+      handleCSS: function(){
+        //change css marginLeft for .center 
+        var styleSheet = document.getElementById('carouselStyles').sheet;
+        var css = this.getCSS('.center', styleSheet);   
+        var styleWidth = parseInt(css.style.width);  
+        var centerDivWidth = parseInt(this.getBrowserWidth()/2 - styleWidth/2); 
+        css.style.marginLeft = centerDivWidth + 'px';
+
+        // change css marginLeft for .right
+        css = this.getCSS('.right', styleSheet);   
+        css.style.marginLeft = (this.getBrowserWidth() - 200) + 'px';
+
+        styleSheet = css = null;
+      }
+    }
+    return function()
+    {
+      module.handleCSS();
+    }
+  }
+
+  var handler = new cssHandler();
+  handler();
+  handler = null;
+
+  window.onresize = function(event) {
+    var handler = new cssHandler();
+    handler();
+    handler = null;
+  }  
+</script>
+
+</head>
+
+<body>
+  <div id="carousel">    
+    <div class="carousel_item center" id="box_1">1</div>
+    <div class="carousel_item left" id="box_2">2</div>    
+    <div class="carousel_item" id="box_3">3</div>
+    <div class="carousel_item" id="box_4">4</div>
+    <div class="carousel_item" id="box_5">5</div>
+    <div class="carousel_item" id="box_6">6</div>
+    <div class="carousel_item" id="box_7">7</div>
+    <div class="carousel_item" id="box_8">8</div>
+    <div class="carousel_item" id="box_9">9</div>
+    <div class="carousel_item right" id="box_10">10</div>
+  </div>
+</body>
+
+<script>
+    function hasClass(el, cls) {
+      return el.className.match(new RegExp('(\\s|^)' + cls + '(\\s|$)'));
+    }
+
+    function detachTransitionHandler(el){
+      if(!!el) el.removeEventListener('webkitTransitionEnd');
+    }
+
+    function getNewLeft(currentLeft){ //gets the next item to show up on a left
+      var items = document.getElementsByClassName('carousel_item');
+      var currentIndex = Array.prototype.slice.call(items).indexOf(currentLeft);
+
+      // if it is the last item, pull the first one
+      if(currentIndex === items.length - 1)
+        return items.item(0);
+      // otherwise, take the next item
+      else
+        return items.item(currentIndex + 1);
+    }
+
+    var x = function(){
+        setInterval(function(){
+        var right = document.querySelector('.right');
+        var center = document.querySelector('.center');
+        var left = document.querySelector('.left');
+        var right_next = document.querySelector('.right_next');
+        var left_prev = getNewLeft(left);
+
+        detachTransitionHandler(right);
+        detachTransitionHandler(center);
+        detachTransitionHandler(left);
+        detachTransitionHandler(right_next);
+        detachTransitionHandler(left_prev);
+
+        if(!!right)
+          right.addEventListener( 
+               'webkitTransitionEnd', 
+               function( event ) { 
+                  if(!hasClass(event.target, 'right_next'))
+                    return;
+                  if(event.propertyName !== 'margin-left')
+                    return;
+
+                  event.target.removeEventListener('webkitTransitionEnd');         
+                  event.target.classList.remove('right_next'); 
+               }, false );
+
+        left_prev.classList.add('left');
+
+        left.classList.remove('left');
+        left.classList.add('center');
+
+        center.classList.remove('center');
+        center.classList.add('right');
+
+        right.classList.remove('right');
+        right.classList.add('right_next');
+
+        right = left = center = left_prev = right_next = null;
+      }, 5000);
+  }
+  x();
+</script>
+<html>
